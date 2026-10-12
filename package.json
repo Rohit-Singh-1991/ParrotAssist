@@ -20,5 +20,7 @@
     "pdfjs-dist": "^4.10.38",
     "mammoth": "^1.9.0"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "vite-plugin-pwa": "^0.21.1"
+  }
 }
