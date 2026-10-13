@@ -85,7 +85,7 @@ export default function App() {
       if (voiceTimer.current !== null) window.clearTimeout(voiceTimer.current);
       voiceTimer.current = window.setTimeout(() => {
         const q = voiceTranscriptRef.current.trim();
-        const questionLike = /\\?|\\b(what|why|how|when|where|who|which|explain|define|describe|compare|difference|can you|could you|tell me|write|implement|solve)\\b/i.test(q);
+        const questionLike = /\?|\b(what|why|how|when|where|who|which|explain|define|describe|compare|difference|can you|could you|tell me|write|implement|solve)\b/i.test(q);
         if (!questionLike) { setVoiceStatus('No clear question detected. Keep listening or stop to review the transcript.'); return; }
         setVoiceStatus('Question detected — generating a concise answer…');
         void ask('Answer this question from a consent-based mock interview. Be direct and concise. Include Definition, Real-world use case, and a short code example only if relevant.\n\nTranscript:\n' + q);
