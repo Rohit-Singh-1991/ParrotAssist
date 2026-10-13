@@ -14,6 +14,7 @@ An interview preparation workspace with server-side OpenAI answers, local docume
 - Browser-side TXT, DOCX and selectable-text PDF extraction.
 - Optional Chrome extension in `extension/`: press **Alt+A** to scan readable text on the active tab and open InterviewMate with a concise answer. It uses an explicit keyboard command and does not run on every page automatically.
 - The extension sends the extracted text in a URL fragment, which is removed from browser history by the app on load. Avoid scanning pages containing passwords, personal data, or confidential information.
+- Visible voice practice mode uses browser speech recognition after you click Start. It waits for a short pause, then auto-answers question-like speech.
 
 ## Install the Chrome extension
 1. Download the repository as a ZIP and extract it, or clone it locally.
@@ -25,7 +26,7 @@ An interview preparation workspace with server-side OpenAI answers, local docume
 The extension requires access to the page you choose to scan. It cannot read Chrome internal pages, some protected sites, or text drawn only inside a canvas/image. It scans the page text; it does not submit forms or interact with the page.
 
 ## Voice practice and privacy
-The current app supports uploading an audio recording you are allowed to transcribe. It does **not** continuously listen to Teams/Meet/Zoom, distinguish speakers in real time, or secretly capture system audio. For live practice, use a visible, consent-based audio workflow and confirm participants are comfortable with recording/transcription. Browser microphone access alone may not capture remote meeting audio when headphones are used.
+The visible voice practice mode uses your microphone and the browser's speech-recognition service. It can transcribe room speech and auto-answer question-like phrases after a pause, but it does **not** identify speakers or directly capture Teams/Meet/Zoom system audio. It may not hear the remote participant if you use headphones. Use only with your friend's knowledge and consent. The app also supports uploading recordings you are allowed to transcribe.
 
 ## Local development
 `npm install && npm run dev`
