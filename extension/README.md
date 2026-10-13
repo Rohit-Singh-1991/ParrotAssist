@@ -16,4 +16,4 @@ This is an explicit, user-triggered page scanner for mock interviews, study, and
 4. InterviewMate opens a new tab and generates a concise answer with a definition, practical use case, and code when relevant.
 5. You can also click the extension icon to scan.
 
-The extension reads visible page text only after the user explicitly invokes it. It does not run continuously, record audio, submit forms, or access Chrome internal pages. Avoid scanning sensitive/confidential pages. Page content is sent to InterviewMate's configured AI provider when an answer is requested.
+The extension reads visible page text only after the user explicitly invokes it. It does not run continuously, record audio, submit forms, or access Chrome internal pages. Avoid scanning sensitive/confidential pages. Page text is sent to the local Ollama model on the same computer when an answer is requested. No paid AI API is used.
