@@ -71,8 +71,11 @@ export default function App() {
       if (!Array.isArray(d.models)) throw new Error('The response is not an Ollama model list. Check that port 11434 is running Ollama, not another application.');
       const installed = d.models.some((m: any) => m.name === 'qwen2.5:3b' || m.name?.startsWith('qwen2.5:3b-'));
       setServerConfigured(installed); setStatus(installed ? 'Free local model ready' : 'Ollama connected · model missing');
-      notify(installed ? 'Local AI is ready. No API key or usage fee is needed.' : 'Run ollama pull qwen2.5:3b in PowerShell, then check again.');
-      if (!installed) throw new Error('Ollama is reachable, but qwen2.5:3b is not installed. In PowerShell run: ollama pull qwen2.5:3b');
+      if (installed) {
+        notify('Local AI is ready. No API key or usage fee is needed.');
+      } else {
+        setError('Ollama is reachable, but qwen2.5:3b is not installed. In PowerShell run: ollama pull qwen2.5:3b');
+      }
     } catch (e) {
       setStatus('Connection failed');
       const message = e instanceof Error ? e.message : 'Unknown connection error.';
