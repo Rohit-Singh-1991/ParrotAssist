@@ -12,6 +12,34 @@ export default function App() {
   const api = async (path: string, body: unknown) => { const r = await fetch(path, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) }); const d = await r.json().catch(() => ({ error: 'Unexpected server response' })); if (!r.ok) throw new Error(d.error || 'Request failed'); return d; };
   const notify = (s: string) => { setNotice(s); window.setTimeout(() => setNotice(''), 4500); };
   const ask = async (q = question) => { if (!q.trim()) return; setBusy(true); setError(''); setAnswer(''); try { const d = await api('/api/answer', { question: q, language: prefs.language, verbosity: prefs.verbosity }); setAnswer(d.answer); setHistory(h => [{ q, a: d.answer, time: new Date().toLocaleString() }, ...h]); } catch (e) { setError((e as Error).message); } finally { setBusy(false); } };
+  useEffect(() => {
+    // Chrome extension passes text in the URL fragment so it is not sent to the web server.
+    const prefix = '#scan=';
+    if (!window.location.hash.startsWith(prefix)) return;
+    let scanned = '';
+    try { scanned = decodeURIComponent(window.location.hash.slice(prefix.length)).slice(0, 12000).trim(); } catch { scanned = ''; }
+    window.history.replaceState(null, '', window.location.pathname + window.location.search);
+    if (!scanned) return;
+    setPage('Live Copilot');
+    setQuestion(scanned);
+    setError('');
+    setAnswer('');
+    setBusy(true);
+    void (async () => {
+      try {
+        const d = await api('/api/answer', {
+          question: 'You are helping with a consent-based mock interview. Answer briefly and directly. Use headings: Definition, Real-world use case, and Code (only if relevant). If the scanned text contains multiple questions, answer the clearest question first.\n\nPage text / question:\n' + scanned,
+          language: prefs.language,
+          verbosity: 'Concise'
+        });
+        setAnswer(d.answer);
+        setHistory(h => [{ q: scanned, a: d.answer, time: new Date().toLocaleString() }, ...h]);
+      } catch (e) { setError((e as Error).message); }
+      finally { setBusy(false); }
+    })();
+  // Process only once on mount; the hash is removed before the network request.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const check = async () => { setBusy(true); setError(''); try { const r = await fetch('/api/health', { method: 'POST' }); const d = await r.json(); setServerConfigured(!!d.configured); setStatus(d.configured ? 'Server key detected' : 'Server reachable · key missing'); notify(d.message); } catch (e) { setStatus('Connection failed'); setError((e as Error).message); } finally { setBusy(false); } };
   const uploadText = async (f: File, kind: string) => { setError(''); setFileName(f.name); if (f.size > 8 * 1024 * 1024) { setError('Keep uploads under 8 MB.'); return; } const ext = f.name.toLowerCase().split('.').pop(); try { if (ext === 'txt' || ext === 'md') { const t = await f.text(); if (kind === 'resume') setResume(t); else if (kind === 'analyzer') setAnalysisQ(t); else setQuestion(t); notify('Text file extracted locally.'); return; } if (ext === 'docx') { const mammoth = await import('mammoth'); const x = await mammoth.extractRawText({ arrayBuffer: await f.arrayBuffer() }); if (kind === 'resume') setResume(x.value); else if (kind === 'analyzer') setAnalysisQ(x.value); else setQuestion(x.value); notify('DOCX extracted locally.'); return; } if (ext === 'pdf') { const pdf = await import('pdfjs-dist'); pdf.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.worker.min.mjs'; const doc = await pdf.getDocument({ data: await f.arrayBuffer() }).promise; let text = ''; for (let i = 1; i <= doc.numPages; i++) { const p = await doc.getPage(i); const c = await p.getTextContent(); text += c.items.map((it: any) => 'str' in it ? it.str : '').join(' ') + '\n'; } if (!text.trim()) throw Error('Scanned PDF needs OCR, which is not connected. Paste the text instead.'); if (kind === 'resume') setResume(text); else if (kind === 'analyzer') setAnalysisQ(text); else setQuestion(text); notify('PDF text extracted locally.'); return; } if (['png', 'jpg', 'jpeg', 'webp'].includes(ext || '')) { notify('Screenshot selected; OCR is not connected yet. Paste its text.'); return; } throw Error('Supported files: TXT, MD, DOCX and selectable-text PDF.'); } catch (e) { setError((e as Error).message); } };
   const makePrep = async () => { setBusy(true); setError(''); try { const d = await api('/api/answer', { question: 'Prepare an interview plan using this resume and job description. List strengths, gaps, six likely questions and STAR themes. Do not invent facts. RESUME:\n' + resume + '\nJOB DESCRIPTION:\n' + jd, language: prefs.language, verbosity: 'Detailed' }); setPrep(d.answer); } catch (e) { setError((e as Error).message); } finally { setBusy(false); } };
