@@ -1,0 +1,28 @@
+{
+  "manifest_version": 3,
+  "name": "InterviewMate Page Scanner",
+  "version": "1.0.0",
+  "description": "Explicitly scan readable text on the active tab and open InterviewMate for mock-interview practice.",
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "tabs"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "Scan this page with InterviewMate"
+  },
+  "commands": {
+    "scan-current-tab": {
+      "suggested_key": {
+        "default": "Alt+A"
+      },
+      "description": "Scan the current tab for a practice question"
+    }
+  },
+  "host_permissions": [
+    "https://interviewmate-three.vercel.app/*"
+  ]
+}
