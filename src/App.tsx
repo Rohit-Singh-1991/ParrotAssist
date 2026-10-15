@@ -14,6 +14,7 @@ export default function App() {
   const voiceRecognition = useRef<any>(null);
   const voiceTimer = useRef<number | null>(null);
   const voiceTranscriptRef = useRef('');
+  const voiceActiveRef = useRef(false);
 
   useEffect(() => { try { const x = localStorage.getItem('im-prefs'); if (x) setPrefs(JSON.parse(x)); } catch { /* ignore corrupt preferences */ } }, []);
   useEffect(() => { try { localStorage.setItem('im-prefs', JSON.stringify(prefs)); } catch { /* storage may be blocked */ } }, [prefs]);
@@ -96,10 +97,11 @@ export default function App() {
       setError(message);
     } finally { setBusy(false); }
   };
-  const uploadText = async (f: File, kind: string) => { setError(''); setFileName(f.name); if (f.size > 8 * 1024 * 1024) { setError('Keep uploads under 8 MB.'); return; } const ext = f.name.toLowerCase().split('.').pop(); try { if (ext === 'txt' || ext === 'md') { const t = await f.text(); if (kind === 'resume') setResume(t); else if (kind === 'analyzer') setAnalysisQ(t); else setQuestion(t); notify('Text file extracted locally.'); return; } if (ext === 'docx') { const mammoth = await import('mammoth'); const x = await mammoth.extractRawText({ arrayBuffer: await f.arrayBuffer() }); if (kind === 'resume') setResume(x.value); else if (kind === 'analyzer') setAnalysisQ(x.value); else setQuestion(x.value); notify('DOCX extracted locally.'); return; } if (ext === 'pdf') { const pdf = await import('pdfjs-dist'); pdf.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.worker.min.mjs'; const doc = await pdf.getDocument({ data: await f.arrayBuffer() }).promise; let text = ''; for (let i = 1; i <= doc.numPages; i++) { const p = await doc.getPage(i); const c = await p.getTextContent(); text += c.items.map((it: any) => 'str' in it ? it.str : '').join(' ') + '\n'; } if (!text.trim()) throw Error('Scanned PDF needs OCR, which is not connected. Paste the text instead.'); if (kind === 'resume') setResume(text); else if (kind === 'analyzer') setAnalysisQ(text); else setQuestion(text); notify('PDF text extracted locally.'); return; } if (['png', 'jpg', 'jpeg', 'webp'].includes(ext || '')) { notify('Screenshot selected; OCR is not connected yet. Paste its text.'); return; } throw Error('Supported files: TXT, MD, DOCX and selectable-text PDF.'); } catch (e) { setError((e as Error).message); } };
+  const uploadText = async (f: File, kind: string) => { setError(''); setFileName(f.name); if (f.size > 8 * 1024 * 1024) { setError('Keep uploads under 8 MB.'); return; } const ext = f.name.toLowerCase().split('.').pop(); try { if (ext === 'txt' || ext === 'md') { const t = await f.text(); if (kind === 'resume') setResume(t); else if (kind === 'analyzer') setAnalysisQ(t); else setQuestion(t); notify('Text file extracted locally.'); return; } if (ext === 'docx') { const mammoth = await import('mammoth'); const x = await mammoth.extractRawText({ arrayBuffer: await f.arrayBuffer() }); if (kind === 'resume') setResume(x.value); else if (kind === 'analyzer') setAnalysisQ(x.value); else setQuestion(x.value); notify('DOCX extracted locally.'); return; } if (ext === 'pdf') { const pdf = await import('pdfjs-dist'); pdf.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.worker.min.mjs'; const doc = await pdf.getDocument({ data: await f.arrayBuffer() }).promise; let text = ''; for (let i = 1; i <= doc.numPages; i++) { const p = await doc.getPage(i); const c = await p.getTextContent(); text += c.items.map((it: any) => 'str' in it ? it.str : '').join(' ') + '\n'; } if (!text.trim()) throw Error('Scanned PDF needs OCR, which is not connected. Paste the text instead.'); if (kind === 'resume') setResume(text); else if (kind === 'analyzer') setAnalysisQ(text); else setQuestion(text); notify('PDF text extracted locally.'); return; } if (['png', 'jpg', 'jpeg', 'webp'].includes(ext || '')) { const { createWorker } = await import('tesseract.js'); const language = prefs.language === 'Hindi' ? 'hin' : 'eng'; const worker = await createWorker(language); try { const result = await worker.recognize(f); const text = result.data.text.trim(); if (!text) throw Error('No readable text found. Try a clearer, straight-on screenshot.'); if (kind === 'resume') setResume(text); else if (kind === 'analyzer') setAnalysisQ(text); else setQuestion(text); notify('Screenshot OCR completed locally in your browser.'); } finally { await worker.terminate(); } return; } throw Error('Supported files: TXT, MD, DOCX and selectable-text PDF.'); } catch (e) { setError((e as Error).message); } };
   const makePrep = async () => { setBusy(true); setError(''); try { const d = await generateAnswer('Prepare an interview plan using this resume and job description. List strengths, gaps, six likely questions and STAR themes. Do not invent facts. RESUME:\n' + resume + '\nJOB DESCRIPTION:\n' + jd, 'Detailed'); setPrep(d.answer); } catch (e) { setError((e as Error).message); } finally { setBusy(false); } };
   const analyze = async () => { setBusy(true); setError(''); try { const d = await generateAnswer('Analyze this interview question with concept, structured sample answer, code where relevant, trade-offs and follow-ups:\n' + analysisQ); setAnalysis(d.answer); } catch (e) { setError((e as Error).message); } finally { setBusy(false); } };
   const stopVoicePractice = () => {
+    voiceActiveRef.current = false;
     if (voiceTimer.current !== null) window.clearTimeout(voiceTimer.current);
     voiceTimer.current = null;
     try { voiceRecognition.current?.stop(); } catch { /* already stopped */ }
@@ -115,6 +117,7 @@ export default function App() {
     rec.continuous = true;
     rec.interimResults = false;
     rec.lang = prefs.language === 'Hindi' ? 'hi-IN' : 'en-US';
+    voiceActiveRef.current = true;
     voiceTranscriptRef.current = '';
     setVoiceTranscript('');
     setVoiceListening(true);
@@ -135,14 +138,30 @@ export default function App() {
         const questionLike = /\?|\b(what|why|how|when|where|who|which|explain|define|describe|compare|difference|can you|could you|tell me|write|implement|solve)\b/i.test(q);
         if (!questionLike) { setVoiceStatus('No clear question detected. Keep listening or stop to review the transcript.'); return; }
         setVoiceStatus('Question detected — generating a concise answer…');
-        void ask('Answer this question from a consent-based mock interview. Be direct and concise. Include Definition, Real-world use case, and a short code example only if relevant.\n\nTranscript:\n' + q);
+        // Submit each detected utterance once instead of repeatedly resending the full conversation.
+        voiceTranscriptRef.current = '';
+        setVoiceTranscript('');
+        void ask('Answer this question from a consent-based mock interview. Be direct and concise. Include Definition, Real-world use case, and a short code example only if relevant.\n\nQuestion transcript:\n' + q);
       }, 1500);
     };
     rec.onerror = (event: any) => {
-      setVoiceStatus('Microphone/speech error: ' + (event.error || 'unknown error'));
-      setVoiceListening(false);
+      const reason = event.error || 'unknown error';
+      setVoiceStatus('Microphone/speech error: ' + reason);
+      if (['not-allowed', 'service-not-allowed', 'audio-capture'].includes(reason)) {
+        voiceActiveRef.current = false;
+        setVoiceListening(false);
+      }
     };
     rec.onend = () => {
+      if (voiceActiveRef.current && voiceRecognition.current === rec) {
+        // Chrome may end a continuous recognition session after a pause; restart while the user has it enabled.
+        window.setTimeout(() => {
+          if (!voiceActiveRef.current || voiceRecognition.current !== rec) return;
+          try { rec.start(); setVoiceListening(true); setVoiceStatus('Listening through your microphone — visible practice mode'); }
+          catch { setVoiceListening(false); setVoiceStatus('Speech recognition paused. Press Stop, then Start voice practice to retry.'); }
+        }, 350);
+        return;
+      }
       setVoiceListening(false);
       if (voiceRecognition.current === rec) voiceRecognition.current = null;
       setVoiceStatus(current => current.includes('generating') ? current : 'Voice session ended');
