@@ -86,7 +86,7 @@ export default function App() {
     setBusy(true); setError('');
     try {
       let base: 'http://localhost:11434' | 'http://127.0.0.1:11434' = 'http://localhost:11434';
-      let r: Response | null = null;
+      let r: { ok: boolean; status: number; json: () => Promise<any> } | null = null;
       try { r = await requestTags(base); } catch { /* try the alternate loopback address below */ }
       if (!r || !r.ok) {
         try {
