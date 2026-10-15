@@ -31,13 +31,19 @@ export default function App() {
   useEffect(() => { try { localStorage.removeItem('im-provider'); } catch { /* storage may be blocked */ } }, []);
   const notify = (s: string) => { setNotice(s); window.setTimeout(() => setNotice(''), 4500); };
   const generateAnswer = async (questionText: string, verbosity = prefs.verbosity) => {
-    let response: Response;
+    const body = { model: 'qwen2.5:3b', stream: false, messages: [
+      { role: 'system', content: `You are InterviewMate, a truthful interview preparation coach. Use ${prefs.language}. Answer detail: ${verbosity}. Give accurate, structured answers; coding topics should include approach, code and complexity where relevant. Never invent candidate experience or metrics. For STAR prompts, use placeholders for real details. Intended for practice or use where permitted.` },
+      { role: 'user', content: questionText.trim() }
+    ], options: { temperature: 0.3, num_predict: verbosity === 'Concise' ? 500 : verbosity === 'Detailed' ? 1800 : 1000 } };
+    let response: { ok: boolean; status: number; json: () => Promise<any> };
     try {
-      response = await fetch(ollamaBase + '/api/chat', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ model: 'qwen2.5:3b', stream: false, messages: [
-        { role: 'system', content: `You are InterviewMate, a truthful interview preparation coach. Use ${prefs.language}. Answer detail: ${verbosity}. Give accurate, structured answers; coding topics should include approach, code and complexity where relevant. Never invent candidate experience or metrics. For STAR prompts, use placeholders for real details. Intended for practice or use where permitted.` },
-        { role: 'user', content: questionText.trim() }
-      ], options: { temperature: 0.3, num_predict: verbosity === 'Concise' ? 500 : verbosity === 'Detailed' ? 1800 : 1000 } }) });
-    } catch { throw new Error('Free local AI is not reachable. Install Ollama, run “ollama pull qwen2.5:3b”, allow this site in OLLAMA_ORIGINS, then restart Ollama.'); }
+      if (window.interviewMateDesktop) {
+        const local = await window.interviewMateDesktop.ollamaChat(ollamaBase, body);
+        response = { ok: local.ok, status: local.status, json: async () => local.data };
+      } else {
+        response = await fetch(ollamaBase + '/api/chat', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
+      }
+    } catch { throw new Error('Free local AI is not reachable. Install Ollama, run “ollama pull qwen2.5:3b”, then open Settings and check the server connection.'); }
     const data = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(response.status === 404 ? 'Ollama returned 404 for /api/chat. Confirm that this is the official Ollama server, then update/restart Ollama from https://ollama.com/download.' : (data.error || 'Ollama could not generate an answer. Check that Ollama is running and the model is installed.'));
     const answerText = data.message?.content?.trim();
@@ -69,15 +75,22 @@ export default function App() {
   // Process only once on mount; the hash is removed before the network request.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+  const requestTags = async (base: 'http://localhost:11434' | 'http://127.0.0.1:11434') => {
+    if (window.interviewMateDesktop) {
+      const local = await window.interviewMateDesktop.ollamaTags(base);
+      return { ok: local.ok, status: local.status, json: async () => local.data };
+    }
+    return fetch(base + '/api/tags', { cache: 'no-store' });
+  };
   const check = async () => {
     setBusy(true); setError('');
     try {
       let base: 'http://localhost:11434' | 'http://127.0.0.1:11434' = 'http://localhost:11434';
       let r: Response | null = null;
-      try { r = await fetch(base + '/api/tags', { cache: 'no-store' }); } catch { /* try the alternate loopback address below */ }
+      try { r = await requestTags(base); } catch { /* try the alternate loopback address below */ }
       if (!r || !r.ok) {
         try {
-          const alternate = await fetch('http://127.0.0.1:11434/api/tags', { cache: 'no-store' });
+          const alternate = await requestTags('http://127.0.0.1:11434');
           if (alternate.ok) {
             base = 'http://127.0.0.1:11434';
             r = alternate;
