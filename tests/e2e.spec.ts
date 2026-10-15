@@ -124,3 +124,27 @@ test('screenshot OCR extracts a question locally in the browser', async ({ page 
   });
   await expect(page.getByPlaceholder('Paste the question to understand…')).toHaveValue(/HashMap/i, { timeout: 75_000 });
 });
+
+test('scanned PDF OCR extracts a question from a raster-only page', async ({ page }) => {
+  test.setTimeout(90_000);
+  await page.setContent('<!doctype html><html><body style="margin:0"><canvas id="scan" width="1400" height="260"></canvas></body></html>');
+  await page.evaluate(() => {
+    const canvas = document.querySelector<HTMLCanvasElement>('#scan');
+    const context = canvas?.getContext('2d');
+    if (!canvas || !context) throw new Error('Canvas is unavailable');
+    context.fillStyle = '#ffffff';
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    context.fillStyle = '#000000';
+    context.font = 'bold 58px Arial';
+    context.fillText('Explain Java HashMap collision handling', 24, 130);
+  });
+  const pdf = await page.pdf({ format: 'A4', printBackground: true });
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Question Analyzer', exact: true }).click();
+  await page.locator('input[type="file"]').setInputFiles({
+    name: 'scanned-question.pdf',
+    mimeType: 'application/pdf',
+    buffer: pdf
+  });
+  await expect(page.getByPlaceholder('Paste the question to understand…')).toHaveValue(/HashMap/i, { timeout: 75_000 });
+});
