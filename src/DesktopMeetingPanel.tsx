@@ -128,6 +128,8 @@ export default function DesktopMeetingPanel({ onQuestion }: Props) {
   const startSession = async () => {
     if (!window.interviewMateDesktop || !sourceId) return;
     setBusy(true);
+    let pendingStream: MediaStream | null = null;
+    let pendingWorker: any = null;
     setStatus('Loading free local speech model (first launch downloads model files)…');
     try {
       if (!asrRef.current) {
@@ -139,7 +141,8 @@ export default function DesktopMeetingPanel({ onQuestion }: Props) {
         audio: { mandatory: { chromeMediaSource: 'desktop' } },
         video: { mandatory: { chromeMediaSource: 'desktop', chromeMediaSourceId: sourceId, maxWidth: 1600, maxHeight: 900, maxFrameRate: 2 } }
       } as unknown as MediaStreamConstraints;
-      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      pendingStream = await navigator.mediaDevices.getUserMedia(constraints);
+      const stream = pendingStream;
       if (!stream.getAudioTracks().length) {
         stream.getTracks().forEach(track => track.stop());
         throw new Error('This source did not provide system audio. On Windows, select the full screen and ensure the meeting audio is playing.');
@@ -149,10 +152,13 @@ export default function DesktopMeetingPanel({ onQuestion }: Props) {
       video.srcObject = stream;
       await video.play();
       const { createWorker } = await import('tesseract.js');
-      const worker = await createWorker('eng');
+      pendingWorker = await createWorker('eng');
+      const worker = pendingWorker;
       streamRef.current = stream;
       videoRef.current = video;
       workerRef.current = worker;
+      pendingStream = null;
+      pendingWorker = null;
       activeRef.current = true;
       setActive(true);
       setBusy(false);
@@ -162,6 +168,8 @@ export default function DesktopMeetingPanel({ onQuestion }: Props) {
       timerRef.current = window.setInterval(() => { void scanScreen(); }, 5000);
       startAudioCycle();
     } catch (error) {
+      pendingStream?.getTracks().forEach(track => track.stop());
+      if (pendingWorker) await pendingWorker.terminate().catch(() => {});
       setBusy(false);
       setStatus('Could not start live capture: ' + (error instanceof Error ? error.message : 'unknown error'));
       stopSession();
