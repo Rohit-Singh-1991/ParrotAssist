@@ -43,11 +43,12 @@ Do not expose port 11434 to the public internet. Keep `OLLAMA_ORIGINS` limited t
 - Live Copilot answers from local `qwen2.5:3b` via Ollama.
 - Interview Prep and Question Analyzer use the same local model.
 - Browser-side extraction for TXT, Markdown, DOCX, selectable-text PDFs, scanned-PDF OCR, and screenshot/image OCR using Tesseract.js.
+- Explicit one-frame meeting-screen capture: choose a tab/window through the browser's native capture picker, OCR the frame locally, and generate an answer with local Ollama.
 - Voice practice via browser speech recognition after the user explicitly starts it; recognition attempts to resume if Chrome ends a session.
 - History held in the current browser session.
 - Optional Chrome extension in `extension/`: press **Alt+A** to scan readable text on the active tab and open InterviewMate. It does not automatically run on every page.
 
-Uploaded audio-file transcription is not included. Screenshot/image OCR and scanned-PDF OCR run locally in the browser; Tesseract.js may download its worker/language data on first use, but the image/PDF contents are processed in the browser. Voice practice uses browser speech-recognition services where provided by the browser. The browser's speech-recognition implementation may use browser-provided services; it does not call an InterviewMate paid AI API.
+Uploaded audio-file transcription is not included. Screenshot/image OCR, scanned-PDF OCR, and the user-triggered one-frame screen capture run locally in the browser; Tesseract.js may download its worker/language data on first use, but captured image content is processed in the browser. Screen capture uses the browser's visible permission picker and stops immediately after one frame; it is not stealth or continuous capture. Voice practice uses browser speech-recognition services where provided by the browser. The browser's speech-recognition implementation may use browser-provided services; it does not call an InterviewMate paid AI API.
 
 ## Run locally
 
@@ -56,4 +57,4 @@ npm install
 npm run dev
 ```
 
-Use only in mock interviews or other situations where AI assistance is permitted. Voice practice uses the microphone only after you click Start; it does not directly capture Teams/Meet/Zoom system audio or identify speakers.
+Use only in mock interviews or other situations where AI assistance is permitted. Voice practice uses the microphone only after you click Start; it does not directly capture Teams/Meet/Zoom system audio or identify speakers. The web screen-capture feature reads visible text from a frame the user explicitly selects; it does not transcribe remote meeting audio. Full system-audio capture and speaker diarization remain unimplemented and require a separately permissioned desktop/audio pipeline.
