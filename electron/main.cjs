@@ -66,6 +66,35 @@ app.whenReady().then(() => {
     callback(['media', 'display-capture', 'audioCapture', 'videoCapture'].includes(permission));
   });
 
+  const safeOllamaBase = value => {
+    const base = String(value || '');
+    if (base !== 'http://localhost:11434' && base !== 'http://127.0.0.1:11434') {
+      throw new Error('Only the local Ollama endpoint is allowed.');
+    }
+    return base;
+  };
+  ipcMain.handle('ollama:tags', async (_event, base) => {
+    try {
+      const response = await fetch(safeOllamaBase(base) + '/api/tags', { signal: AbortSignal.timeout(8000) });
+      return { ok: response.ok, status: response.status, data: await response.json().catch(() => ({})) };
+    } catch (error) {
+      return { ok: false, status: 0, data: { error: error instanceof Error ? error.message : 'Local Ollama is unreachable.' } };
+    }
+  });
+  ipcMain.handle('ollama:chat', async (_event, base, body) => {
+    try {
+      const response = await fetch(safeOllamaBase(base) + '/api/chat', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(body),
+        signal: AbortSignal.timeout(180000)
+      });
+      return { ok: response.ok, status: response.status, data: await response.json().catch(() => ({})) };
+    } catch (error) {
+      return { ok: false, status: 0, data: { error: error instanceof Error ? error.message : 'Local Ollama is unreachable.' } };
+    }
+  });
+
   ipcMain.handle('desktop:list-sources', async () => {
     const sources = await desktopCapturer.getSources({
       types: ['screen', 'window'],
