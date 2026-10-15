@@ -38,6 +38,25 @@ A working endpoint returns HTTP 200 and JSON containing a `models` array. If eit
 
 Do not expose port 11434 to the public internet. Keep `OLLAMA_ORIGINS` limited to the InterviewMate website. If the endpoint works in PowerShell but the site cannot reach it, check Chrome's local-network permission prompt and verify the origin variable, then restart Ollama.
 
+## Windows desktop app (free)
+
+The desktop edition is packaged with Electron and includes a separate always-on-top **visible** answer window. On Windows, the Desktop live meeting session lets you select a screen/window, capture system loopback audio where Windows/Electron exposes it, transcribe English speech with the free local `onnx-community/whisper-tiny.en` model, OCR the selected display locally with Tesseract, and combine detected spoken questions with screen text before asking local Ollama for an answer. First launch downloads the speech model and OCR language data; there are no paid AI APIs. Model downloads require internet once, then cached models can run locally.
+
+Build/run from Windows with Node.js installed:
+
+```powershell
+npm install
+npm run desktop:dev
+```
+
+Build the Windows installer:
+
+```powershell
+npm run desktop:build
+```
+
+The installer is produced under `release/`. GitHub Actions also builds a Windows installer and uploads it as an artifact on each push to `main` (artifact retained for 14 days). The desktop audio path is platform-dependent; automated builds do not substitute for testing system audio on your own Windows device. Select a screen and verify that audio tracks are available before relying on live transcription. The answer window stays visible and is not a hidden/undetectable overlay.
+
 ## Free features
 
 - Live Copilot answers from local `qwen2.5:3b` via Ollama.
@@ -58,4 +77,4 @@ npm install
 npm run dev
 ```
 
-Use only in mock interviews or other situations where AI assistance is permitted. Voice practice uses the microphone only after you click Start; it does not directly capture Teams/Meet/Zoom system audio or identify speakers. The combined web session reads visible text from a screen the user explicitly selects and recognizes speech through the browser microphone API. It still does not directly capture remote Teams/Meet/Zoom system audio, and it cannot reliably hear remote participants when headphones are used. Full system-audio capture and speaker diarization remain unimplemented and require a separately permissioned desktop/audio pipeline.
+Use only in mock interviews or other situations where AI assistance is permitted. Voice practice uses the microphone only after you click Start; it does not directly capture Teams/Meet/Zoom system audio or identify speakers. The combined web session reads visible text from a screen the user explicitly selects and recognizes speech through the browser microphone API. The Windows desktop build adds an attempted system loopback audio path and local Whisper transcription, but real audio availability varies by OS and selected source and must be tested on the target machine. Speaker diarization is not implemented.
