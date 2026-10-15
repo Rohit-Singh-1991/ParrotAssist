@@ -2,10 +2,13 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 
+const isDesktopBuild = process.env.ELECTRON_BUILD === 'true';
+
 export default defineConfig({
+  base: isDesktopBuild ? './' : '/',
   plugins: [
     react(),
-    VitePWA({
+    ...(!isDesktopBuild ? [VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['pwa-icon.svg'],
       manifest: {
@@ -27,6 +30,6 @@ export default defineConfig({
         navigateFallback: '/index.html',
         globPatterns: ['**/*.{js,css,html,svg,woff2}']
       }
-    })
+    })] : [])
   ]
 });
