@@ -177,3 +177,52 @@ test('user-selected meeting screen is captured once, OCRed locally, and answered
   await expect(page.getByPlaceholder('How does HashMap work internally in Java?')).toHaveValue(/HashMap/i, { timeout: 75_000 });
   await expect(page.getByText(/A HashMap stores key-value pairs/i)).toBeVisible({ timeout: 15_000 });
 });
+
+
+test('combined live session reads the selected screen and answers a detected spoken question', async ({ page }) => {
+  test.setTimeout(90_000);
+  await mockOllama(page);
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator.mediaDevices, 'getDisplayMedia', {
+      configurable: true,
+      value: async () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = 1400;
+        canvas.height = 260;
+        const context = canvas.getContext('2d');
+        if (!context) throw new Error('Canvas unavailable');
+        context.fillStyle = '#ffffff';
+        context.fillRect(0, 0, canvas.width, canvas.height);
+        context.fillStyle = '#000000';
+        context.font = 'bold 58px Arial';
+        context.fillText('Java HashMap interview question', 24, 140);
+        return canvas.captureStream(1);
+      }
+    });
+    class MockSpeechRecognition {
+      continuous = false;
+      interimResults = false;
+      lang = 'en-US';
+      onresult: ((event: any) => void) | null = null;
+      onerror: ((event: any) => void) | null = null;
+      onend: (() => void) | null = null;
+      start() {
+        window.setTimeout(() => {
+          const result: any = [{ transcript: 'How does Java HashMap work?' }];
+          result.isFinal = true;
+          this.onresult?.({ resultIndex: 0, results: [result] });
+        }, 500);
+      }
+      stop() { this.onend?.(); }
+    }
+    (window as any).SpeechRecognition = MockSpeechRecognition;
+  });
+  await page.goto('/');
+  await page.getByRole('button', { name: /start mock interview/i }).click();
+  await page.getByRole('button', { name: /start voice \+ screen session/i }).click();
+  await expect(page.getByText(/SESSION ACTIVE/i)).toBeVisible();
+  await expect(page.getByText(/Latest visible screen text/i)).toBeVisible({ timeout: 75_000 });
+  await expect(page.getByText(/A HashMap stores key-value pairs/i)).toBeVisible({ timeout: 15_000 });
+  await page.getByRole('button', { name: /stop both inputs/i }).click();
+  await expect(page.getByText(/SESSION OFF/i)).toBeVisible();
+});
