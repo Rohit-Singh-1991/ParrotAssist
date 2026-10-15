@@ -149,7 +149,7 @@ export default function DesktopMeetingPanel({ onQuestion }: Props) {
       }
       setStatus('Requesting the selected display and system audio…');
       const constraints = {
-        audio: { mandatory: { chromeMediaSource: 'desktop', chromeMediaSourceId: sourceId } },
+        audio: { mandatory: { chromeMediaSource: 'desktop' } },
         video: { mandatory: { chromeMediaSource: 'desktop', chromeMediaSourceId: sourceId, maxWidth: 1600, maxHeight: 900, maxFrameRate: 2 } }
       } as unknown as MediaStreamConstraints;
       const stream = await navigator.mediaDevices.getUserMedia(constraints);
@@ -215,7 +215,7 @@ export default function DesktopMeetingPanel({ onQuestion }: Props) {
 
   return <section className="panel desktop-session">
     <div className="section-title"><h2><Monitor />Desktop live meeting session</h2><span className={'pill ' + (active ? 'ok' : '')}>{active ? 'CAPTURING' : desktop ? 'DESKTOP' : 'DESKTOP ONLY'}</span></div>
-    <p>On Windows, select the meeting screen to combine system-audio transcription (local Whisper model) with visible screen/code OCR. Both inputs are processed on your computer; detected questions are sent to your configured local Ollama model.</p>
+    <p>On Windows, select the full display (not just a single window) to maximize system-audio loopback compatibility, combining system-audio transcription (local Whisper model) with visible screen/code OCR. Both inputs are processed on your computer; detected questions are sent to your configured local Ollama model.</p>
     {!desktop ? <div className="notice"><ShieldCheck size={17}/><div><b>Windows desktop app required</b><p>This capability uses OS-level capture APIs and is intentionally unavailable in the browser build.</p></div></div> : <>
       <div className="actions">
         <select aria-label="Meeting display" value={sourceId} disabled={active || busy} onChange={event => setSourceId(event.target.value)} style={{flex:1,minWidth:180}}>
