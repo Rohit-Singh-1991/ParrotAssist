@@ -66,7 +66,7 @@ test('settings exposes the free local AI setup and analyzer accepts screenshot f
   await page.getByRole('button', { name: 'Settings' }).click();
   await expect(page.getByRole('heading', { name: /Workspace Settings/i })).toBeVisible();
   await expect(page.getByText(/No paid AI API is used/i)).toBeVisible();
-  await page.getByRole('button', { name: 'Question Analyzer' }).click();
+  await page.getByRole('button', { name: 'Question Analyzer', exact: true }).click();
   const upload = page.locator('input[type="file"]').last();
   await expect(upload).toHaveAttribute('accept', /\.png/);
   await expect(page.getByPlaceholder('Paste the question to understand…')).toBeVisible();
@@ -103,7 +103,7 @@ test('voice practice transcribes a detected question and generates an answer', a
 test('screenshot OCR extracts a question locally in the browser', async ({ page }) => {
   test.setTimeout(90_000);
   await page.goto('/');
-  await page.getByRole('button', { name: 'Question Analyzer' }).click();
+  await page.getByRole('button', { name: 'Question Analyzer', exact: true }).click();
   const base64 = await page.evaluate(() => {
     const canvas = document.createElement('canvas');
     canvas.width = 1400;
