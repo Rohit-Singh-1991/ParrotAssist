@@ -1,4 +1,4 @@
-name: Build and smoke checks
+name: Build and browser smoke tests
 on:
   push:
     branches: [main]
@@ -8,7 +8,7 @@ on:
 permissions:
   contents: read
 jobs:
-  build:
+  build-and-test:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -19,5 +19,9 @@ jobs:
           node-version: 20
       - name: Install dependencies
         run: npm install
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
       - name: Build production bundle
         run: npm run build
+      - name: Run browser smoke tests
+        run: npm run test:e2e
