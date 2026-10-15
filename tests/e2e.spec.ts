@@ -99,3 +99,28 @@ test('voice practice transcribes a detected question and generates an answer', a
   await expect(page.getByText(/Listening through your microphone/i)).toBeVisible();
   await expect(page.getByText(/A HashMap stores key-value pairs/i)).toBeVisible({ timeout: 15_000 });
 });
+
+test('screenshot OCR extracts a question locally in the browser', async ({ page }) => {
+  test.setTimeout(90_000);
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Question Analyzer' }).click();
+  const base64 = await page.evaluate(() => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 1400;
+    canvas.height = 220;
+    const context = canvas.getContext('2d');
+    if (!context) throw new Error('Canvas is unavailable');
+    context.fillStyle = '#ffffff';
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    context.fillStyle = '#000000';
+    context.font = 'bold 58px Arial';
+    context.fillText('How does HashMap work in Java?', 24, 125);
+    return canvas.toDataURL('image/png').split(',')[1];
+  });
+  await page.locator('input[type="file"]').setInputFiles({
+    name: 'interview-question.png',
+    mimeType: 'image/png',
+    buffer: Buffer.from(base64, 'base64')
+  });
+  await expect(page.getByPlaceholder('Paste the question to understand…')).toHaveValue(/HashMap/i, { timeout: 75_000 });
+});
