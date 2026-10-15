@@ -15,6 +15,7 @@ export default function DesktopMeetingPanel({ onQuestion }: Props) {
   const [status, setStatus] = useState(desktop ? 'Choose the meeting display to begin' : 'Available in the Windows desktop app');
   const [transcript, setTranscript] = useState('');
   const [screenText, setScreenText] = useState('');
+  const screenTextRef = useRef('');
   const streamRef = useRef<MediaStream | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const workerRef = useRef<any>(null);
