@@ -96,7 +96,7 @@ test('voice practice transcribes a detected question and generates an answer', a
   await page.goto('/');
   await page.getByRole('button', { name: /start mock interview/i }).click();
   await page.getByRole('button', { name: /start voice practice/i }).click();
-  await expect(page.getByText(/Listening through your microphone/i)).toBeVisible();
+  await expect(page.getByText(/Listening through your microphone/i).first()).toBeVisible();
   await expect(page.getByText(/A HashMap stores key-value pairs/i)).toBeVisible({ timeout: 15_000 });
 });
 
