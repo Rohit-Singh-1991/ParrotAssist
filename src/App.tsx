@@ -116,7 +116,7 @@ export default function App() {
     screenStreamRef.current?.getTracks().forEach(track => track.stop());
     screenStreamRef.current = null;
     if (screenVideoRef.current) { screenVideoRef.current.pause(); screenVideoRef.current.srcObject = null; screenVideoRef.current = null; }
-    if (screenWorkerRef.current) { void screenWorkerRef.current.terminate(); screenWorkerRef.current = null; }
+    if (screenWorkerRef.current) { void screenWorkerRef.current.terminate().catch(() => {}); screenWorkerRef.current = null; }
     screenTextRef.current = '';
     setScreenTranscript('');
     setLiveSession(false);
