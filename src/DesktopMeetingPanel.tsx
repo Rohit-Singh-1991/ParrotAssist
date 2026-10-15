@@ -134,7 +134,7 @@ export default function DesktopMeetingPanel({ onQuestion }: Props) {
     try {
       if (!asrRef.current) {
         const { pipeline } = await import('@huggingface/transformers');
-        asrRef.current = await pipeline('automatic-speech-recognition', 'onnx-community/whisper-tiny.en', { device: 'wasm' }) as unknown as Asr;
+        asrRef.current = await pipeline('automatic-speech-recognition', 'onnx-community/whisper-tiny.en', { device: 'cpu' }) as unknown as Asr;
       }
       setStatus('Requesting the selected display and system audio…');
       const constraints = {
@@ -170,9 +170,9 @@ export default function DesktopMeetingPanel({ onQuestion }: Props) {
     } catch (error) {
       pendingStream?.getTracks().forEach(track => track.stop());
       if (pendingWorker) await pendingWorker.terminate().catch(() => {});
+      stopSession();
       setBusy(false);
       setStatus('Could not start live capture: ' + (error instanceof Error ? error.message : 'unknown error'));
-      stopSession();
     }
   };
 
