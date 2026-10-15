@@ -148,3 +148,32 @@ test('scanned PDF OCR extracts a question from a raster-only page', async ({ pag
   });
   await expect(page.getByPlaceholder('Paste the question to understand…')).toHaveValue(/HashMap/i, { timeout: 75_000 });
 });
+
+
+test('user-selected meeting screen is captured once, OCRed locally, and answered', async ({ page }) => {
+  test.setTimeout(90_000);
+  await mockOllama(page);
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator.mediaDevices, 'getDisplayMedia', {
+      configurable: true,
+      value: async () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = 1400;
+        canvas.height = 260;
+        const context = canvas.getContext('2d');
+        if (!context) throw new Error('Canvas unavailable');
+        context.fillStyle = '#ffffff';
+        context.fillRect(0, 0, canvas.width, canvas.height);
+        context.fillStyle = '#000000';
+        context.font = 'bold 58px Arial';
+        context.fillText('How does HashMap work in Java?', 24, 140);
+        return canvas.captureStream(1);
+      }
+    });
+  });
+  await page.goto('/');
+  await page.getByRole('button', { name: /start mock interview/i }).click();
+  await page.getByRole('button', { name: /capture screen & answer/i }).click();
+  await expect(page.getByPlaceholder('How does HashMap work internally in Java?')).toHaveValue(/HashMap/i, { timeout: 75_000 });
+  await expect(page.getByText(/A HashMap stores key-value pairs/i)).toBeVisible({ timeout: 15_000 });
+});
