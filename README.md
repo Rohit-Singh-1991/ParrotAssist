@@ -42,12 +42,12 @@ Do not expose port 11434 to the public internet. Keep `OLLAMA_ORIGINS` limited t
 
 - Live Copilot answers from local `qwen2.5:3b` via Ollama.
 - Interview Prep and Question Analyzer use the same local model.
-- Browser-side extraction for TXT, Markdown, DOCX, selectable-text PDFs, and screenshot/image OCR using Tesseract.js.
+- Browser-side extraction for TXT, Markdown, DOCX, selectable-text PDFs, scanned-PDF OCR, and screenshot/image OCR using Tesseract.js.
 - Voice practice via browser speech recognition after the user explicitly starts it; recognition attempts to resume if Chrome ends a session.
 - History held in the current browser session.
 - Optional Chrome extension in `extension/`: press **Alt+A** to scan readable text on the active tab and open InterviewMate. It does not automatically run on every page.
 
-Uploaded audio-file transcription and OCR for scanned PDFs are not included. Image OCR is available for uploaded screenshots/images and runs locally in the browser; scanned PDFs can be converted to images first. Voice practice uses browser speech-recognition services where provided by the browser. The browser's speech-recognition implementation may use browser-provided services; it does not call an InterviewMate paid AI API.
+Uploaded audio-file transcription is not included. Screenshot/image OCR and scanned-PDF OCR run locally in the browser; Tesseract.js may download its worker/language data on first use, but the image/PDF contents are processed in the browser. Voice practice uses browser speech-recognition services where provided by the browser. The browser's speech-recognition implementation may use browser-provided services; it does not call an InterviewMate paid AI API.
 
 ## Run locally
 
