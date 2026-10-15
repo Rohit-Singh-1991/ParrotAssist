@@ -44,11 +44,12 @@ Do not expose port 11434 to the public internet. Keep `OLLAMA_ORIGINS` limited t
 - Interview Prep and Question Analyzer use the same local model.
 - Browser-side extraction for TXT, Markdown, DOCX, selectable-text PDFs, scanned-PDF OCR, and screenshot/image OCR using Tesseract.js.
 - Explicit one-frame meeting-screen capture: choose a tab/window through the browser's native capture picker, OCR the frame locally, and generate an answer with local Ollama.
+- Combined live session: user-selected screen OCR refreshes every five seconds while microphone speech recognition runs; after a detected spoken question pauses, the answer prompt combines the transcript with the latest visible screen text.
 - Voice practice via browser speech recognition after the user explicitly starts it; recognition attempts to resume if Chrome ends a session.
 - History held in the current browser session.
 - Optional Chrome extension in `extension/`: press **Alt+A** to scan readable text on the active tab and open InterviewMate. It does not automatically run on every page.
 
-Uploaded audio-file transcription is not included. Screenshot/image OCR, scanned-PDF OCR, and the user-triggered one-frame screen capture run locally in the browser; Tesseract.js may download its worker/language data on first use, but captured image content is processed in the browser. Screen capture uses the browser's visible permission picker and stops immediately after one frame; it is not stealth or continuous capture. Voice practice uses browser speech-recognition services where provided by the browser. The browser's speech-recognition implementation may use browser-provided services; it does not call an InterviewMate paid AI API.
+Uploaded audio-file transcription is not included. Screenshot/image OCR, scanned-PDF OCR, and the user-triggered one-frame screen capture run locally in the browser; Tesseract.js may download its worker/language data on first use, but captured image content is processed in the browser. The one-frame capture action stops after one frame. Combined live session is different: it uses a persistent user-selected screen-share stream, with a visible browser capture indicator, and OCRs frames every five seconds until stopped. It is not hidden or stealth capture. Voice practice uses browser speech-recognition services where provided by the browser. The browser's speech-recognition implementation may use browser-provided services; it does not call an InterviewMate paid AI API.
 
 ## Run locally
 
@@ -57,4 +58,4 @@ npm install
 npm run dev
 ```
 
-Use only in mock interviews or other situations where AI assistance is permitted. Voice practice uses the microphone only after you click Start; it does not directly capture Teams/Meet/Zoom system audio or identify speakers. The web screen-capture feature reads visible text from a frame the user explicitly selects; it does not transcribe remote meeting audio. Full system-audio capture and speaker diarization remain unimplemented and require a separately permissioned desktop/audio pipeline.
+Use only in mock interviews or other situations where AI assistance is permitted. Voice practice uses the microphone only after you click Start; it does not directly capture Teams/Meet/Zoom system audio or identify speakers. The combined web session reads visible text from a screen the user explicitly selects and recognizes speech through the browser microphone API. It still does not directly capture remote Teams/Meet/Zoom system audio, and it cannot reliably hear remote participants when headphones are used. Full system-audio capture and speaker diarization remain unimplemented and require a separately permissioned desktop/audio pipeline.
