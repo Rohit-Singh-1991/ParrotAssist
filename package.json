@@ -16,7 +16,8 @@
     "react-dom": "^19.0.0",
     "lucide-react": "^0.575.0",
     "pdfjs-dist": "^4.10.38",
-    "mammoth": "^1.9.0"
+    "mammoth": "^1.9.0",
+    "tesseract.js": "^6.0.1"
   },
   "devDependencies": {
     "vite-plugin-pwa": "^0.21.1"
