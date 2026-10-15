@@ -1,4 +1,7 @@
 name: Windows desktop installer
+concurrency:
+  group: interviewmate-desktop-${{ github.ref }}
+  cancel-in-progress: true
 on:
   push:
     branches: [main]
