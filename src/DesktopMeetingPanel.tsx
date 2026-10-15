@@ -5,19 +5,6 @@ type DesktopSource = { id: string; name: string; type: string; thumbnail: string
 type Props = { onQuestion: (spokenQuestion: string, screenText: string) => Promise<void> | void };
 type Asr = (audio: { array: Float32Array; sampling_rate: number }, options?: Record<string, unknown>) => Promise<{ text?: string }>;
 
-declare global {
-  interface Window {
-    interviewMateDesktop?: {
-      isDesktop: boolean;
-      listSources: () => Promise<DesktopSource[]>;
-      updateAnswer: (payload: { question: string; answer: string }) => Promise<boolean>;
-      showAnswerWindow: () => Promise<boolean>;
-      hideAnswerWindow: () => Promise<boolean>;
-      closeAnswerWindow: () => Promise<boolean>;
-      onAnswerUpdate: (callback: (payload: { question: string; answer: string; updatedAt: string }) => void) => () => void;
-    };
-  }
-}
 
 export default function DesktopMeetingPanel({ onQuestion }: Props) {
   const desktop = Boolean(window.interviewMateDesktop?.isDesktop);
