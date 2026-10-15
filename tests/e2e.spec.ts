@@ -56,7 +56,7 @@ test('Alt+A extension scan fragment opens Live Copilot and generates an answer',
   const scannedQuestion = 'Question: Explain Java HashMap collision handling.';
   await page.goto('/#scan=' + encodeURIComponent(scannedQuestion));
   await expect(page.getByRole('heading', { name: /AI Answer Companion/i })).toBeVisible();
-  await expect(page.getByText(/collision handling/i)).toBeVisible();
+  await expect(page.getByPlaceholder('How does HashMap work internally in Java?')).toHaveValue(/collision handling/i);
   await expect(page.getByText(/A HashMap stores key-value pairs/i)).toBeVisible({ timeout: 10_000 });
   await expect(page).not.toHaveURL(/#scan=/);
 });
