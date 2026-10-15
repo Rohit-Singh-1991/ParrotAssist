@@ -8,9 +8,9 @@
     "build": "vite build",
     "preview": "vite preview --host 0.0.0.0",
     "test:e2e": "playwright test",
-    "desktop:dev": "concurrently -k \"npm:dev\" \"wait-on http://127.0.0.1:5173 && electron .\"",
-    "desktop:build": "npm run build && electron-builder --win nsis",
-    "desktop:pack": "npm run build && electron-builder --dir"
+    "desktop:dev": "concurrently -k \"npm:dev\" \"wait-on http://127.0.0.1:5173 && cross-env VITE_DEV_SERVER_URL=http://127.0.0.1:5173 electron .\"",
+    "desktop:build": "cross-env ELECTRON_BUILD=true vite build && electron-builder --win nsis",
+    "desktop:pack": "cross-env ELECTRON_BUILD=true vite build && electron-builder --dir"
   },
   "dependencies": {
     "@vitejs/plugin-react": "^4.3.4",
@@ -30,7 +30,8 @@
     "electron": "^35.0.0",
     "electron-builder": "^26.0.12",
     "concurrently": "^9.1.2",
-    "wait-on": "^8.0.3"
+    "wait-on": "^8.0.3",
+    "cross-env": "^7.0.3"
   },
   "main": "electron/main.cjs",
   "build": {
