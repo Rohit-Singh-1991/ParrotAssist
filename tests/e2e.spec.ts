@@ -71,3 +71,31 @@ test('settings exposes the free local AI setup and analyzer accepts screenshot f
   await expect(upload).toHaveAttribute('accept', /\.png/);
   await expect(page.getByPlaceholder('Paste the question to understand…')).toBeVisible();
 });
+
+test('voice practice transcribes a detected question and generates an answer', async ({ page }) => {
+  await mockOllama(page);
+  await page.addInitScript(() => {
+    class MockSpeechRecognition {
+      continuous = false;
+      interimResults = false;
+      lang = 'en-US';
+      onresult: ((event: any) => void) | null = null;
+      onerror: ((event: any) => void) | null = null;
+      onend: (() => void) | null = null;
+      start() {
+        window.setTimeout(() => {
+          const finalResult: any = [{ transcript: 'How does Java HashMap work?' }];
+          finalResult.isFinal = true;
+          this.onresult?.({ resultIndex: 0, results: [finalResult] });
+        }, 100);
+      }
+      stop() { this.onend?.(); }
+    }
+    (window as any).SpeechRecognition = MockSpeechRecognition;
+  });
+  await page.goto('/');
+  await page.getByRole('button', { name: /start mock interview/i }).click();
+  await page.getByRole('button', { name: /start voice practice/i }).click();
+  await expect(page.getByText(/Listening through your microphone/i)).toBeVisible();
+  await expect(page.getByText(/A HashMap stores key-value pairs/i)).toBeVisible({ timeout: 15_000 });
+});
