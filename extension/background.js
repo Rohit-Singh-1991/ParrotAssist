@@ -1,4 +1,4 @@
-const APP_URL = "https://interviewmate-three.vercel.app/";
+const APP_URL = "https://parrotassist-newdivide4-8630.vercel.app/";
 
 async function scanActiveTab(tab) {
   if (!tab || !tab.id || !tab.url || /^(chrome|edge|about|chrome-extension):\/\//i.test(tab.url)) {
