@@ -12,9 +12,9 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['pwa-icon.svg'],
       manifest: {
-        name: 'InterviewMate AI',
-        short_name: 'InterviewMate',
-        description: 'AI-powered interview preparation and practice workspace.',
+        name: 'parrotAssist — Interview Copilot',
+        short_name: 'parrotAssist',
+        description: 'Local-AI interview practice and live meeting copilot.',
         theme_color: '#0d0f14',
         background_color: '#0d0f14',
         display: 'standalone',
