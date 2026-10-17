@@ -1,5 +1,5 @@
 {
-  "name": "interviewmate",
+  "name": "parrotassist",
   "version": "1.0.0",
   "private": true,
   "type": "module",
@@ -35,8 +35,8 @@
   },
   "main": "electron/main.cjs",
   "build": {
-    "appId": "com.interviewmate.desktop",
-    "productName": "InterviewMate",
+    "appId": "com.parrotassist.desktop",
+    "productName": "parrotAssist",
     "directories": {
       "output": "release"
     },
