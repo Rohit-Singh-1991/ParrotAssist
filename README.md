@@ -38,6 +38,12 @@ A working endpoint returns HTTP 200 and JSON containing a `models` array. If eit
 
 Do not expose port 11434 to the public internet. Keep `OLLAMA_ORIGINS` limited to the exact InterviewMate/parrotAssist app origins and local development origins you use; preserve both app origins rather than replacing one with the other. If the endpoint works in PowerShell but the site cannot reach it, check Chrome's local-network permission prompt and verify the origin variable, then restart Ollama.
 
+## Meeting platform coverage
+
+The desktop live-session panel now offers **Microsoft Teams → Google Meet → Zoom** as selectable contexts and suggests a shareable window whose title matches the selected platform. This is a source-selection aid, not an official Teams/Meet/Zoom API integration. All three use the same Windows/Electron desktop capture path: selected display/window video plus system-audio loopback where Electron/Windows exposes it, local Whisper transcription, local OCR, and local Ollama answers. If the selected source has no audio track, capture stops with a platform-labelled diagnostic rather than claiming the meeting is connected. Official meeting APIs, account OAuth, and platform-specific transcript access are not configured.
+
+Automated Playwright coverage uses mocked desktop sources to verify source selection for Teams, Meet, and Zoom. It does not prove that live system audio works on a physical Windows device. Before relying on it, run a consent-based test meeting on each platform, select the matching window or full display, verify that the local transcript changes when speech plays, and confirm Stop ends capture.
+
 ## Windows desktop app (free)
 
 The desktop edition is packaged with Electron and includes a separate always-on-top **visible** answer window. On Windows, the Desktop live meeting session lets you select a screen/window, capture system loopback audio where Windows/Electron exposes it, transcribe English speech with the free local `onnx-community/whisper-tiny.en` model, OCR the selected display locally with Tesseract, and combine detected spoken questions with screen text before asking local Ollama for an answer. First launch downloads the speech model and OCR language data; there are no paid AI APIs. Model downloads require internet once, then cached models can run locally.
