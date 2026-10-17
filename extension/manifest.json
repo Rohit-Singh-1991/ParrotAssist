@@ -23,6 +23,7 @@
     }
   },
   "host_permissions": [
-    "https://interviewmate-three.vercel.app/*"
+    "https://interviewmate-three.vercel.app/*",
+    "https://parrotassist-newdivide4-8630.vercel.app/*"
   ]
 }
