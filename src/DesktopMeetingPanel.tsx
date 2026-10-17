@@ -60,7 +60,8 @@ export default function DesktopMeetingPanel({ onQuestion }: Props) {
       setSourceId(match.id);
       setStatus('Suggested source for ' + next + ': ' + match.name + '. Verify the source, then start capture.');
     } else {
-      setStatus('No obvious ' + next + ' window title found. Choose the full screen or the correct meeting window manually. Platform selection does not connect an official meeting API.');
+      setSourceId('');
+      setStatus('No obvious ' + next + ' window title found. The previous source was cleared; choose the full screen or the correct meeting window manually. Platform selection does not connect an official meeting API.');
     }
   };
 
