@@ -24,7 +24,7 @@ async function scanActiveTab(tab) {
     // Fragment is client-side only; the app removes it after reading it.
     await chrome.tabs.create({ url: APP_URL + "#scan=" + encodeURIComponent(payload) });
   } catch (error) {
-    console.warn("InterviewMate scan failed. The page may be protected.", error);
+    console.warn("parrotAssist scan failed. The page may be protected.", error);
     await chrome.tabs.create({ url: APP_URL });
   }
 }
