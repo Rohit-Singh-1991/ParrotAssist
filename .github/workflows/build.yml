@@ -1,6 +1,6 @@
 name: Build and browser smoke tests
 concurrency:
-  group: interviewmate-ci-${{ github.workflow }}-${{ github.ref }}
+  group: parrotassist-ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 on:
   push:

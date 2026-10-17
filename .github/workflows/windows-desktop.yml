@@ -1,6 +1,6 @@
 name: Windows desktop installer
 concurrency:
-  group: interviewmate-desktop-${{ github.ref }}
+  group: parrotassist-desktop-${{ github.ref }}
   cancel-in-progress: true
 on:
   push:
@@ -26,7 +26,7 @@ jobs:
       - name: Upload installer
         uses: actions/upload-artifact@v4
         with:
-          name: InterviewMate-Windows-Installer
+          name: ParrotAssist-Windows-Installer
           path: release/*.exe
           if-no-files-found: error
           retention-days: 14

@@ -226,3 +226,14 @@ test('combined live session reads the selected screen and answers a detected spo
   await page.getByRole('button', { name: /stop both inputs/i }).click();
   await expect(page.getByText(/SESSION OFF/i)).toBeVisible();
 });
+
+
+test('shows parrotAssist branding and transparent live-capture guardrails', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.locator('.brand')).toContainText('parrotAssist');
+  await expect(page.locator('.brand')).not.toContainText('InterviewMate');
+  await page.getByRole('button', { name: /start mock interview/i }).click();
+  await expect(page.getByRole('heading', { name: /AI Answer Companion/i })).toBeVisible();
+  await expect(page.getByText(/This app does not secretly capture call audio/i)).toBeVisible();
+  await expect(page.getByText(/Windows desktop app required/i)).toBeVisible();
+});
