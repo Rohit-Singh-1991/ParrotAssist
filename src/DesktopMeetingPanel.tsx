@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { AudioLines, Monitor, RefreshCw, Square, LoaderCircle, ShieldCheck, Sparkles } from 'lucide-react';
 
 type DesktopSource = { id: string; name: string; type: string; thumbnail: string; appIcon: string };
+type MeetingPlatform = 'Microsoft Teams' | 'Google Meet' | 'Zoom';
 type Props = { onQuestion: (spokenQuestion: string, screenText: string) => Promise<void> | void };
 type Asr = (audio: { array: Float32Array; sampling_rate: number }, options?: Record<string, unknown>) => Promise<{ text?: string }>;
 
@@ -9,6 +10,7 @@ type Asr = (audio: { array: Float32Array; sampling_rate: number }, options?: Rec
 export default function DesktopMeetingPanel({ onQuestion }: Props) {
   const desktop = Boolean(window.interviewMateDesktop?.isDesktop);
   const [sources, setSources] = useState<DesktopSource[]>([]);
+  const [platform, setPlatform] = useState<MeetingPlatform>('Microsoft Teams');
   const [sourceId, setSourceId] = useState('');
   const [active, setActive] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -34,10 +36,31 @@ export default function DesktopMeetingPanel({ onQuestion }: Props) {
     try {
       const result = await window.interviewMateDesktop.listSources();
       setSources(result);
-      if (!sourceId && result.length) setSourceId(result.find(s => s.type === 'screen')?.id || result[0].id);
+      if (!sourceId && result.length) {
+        const suggested = result.find(s => platformMatches(platform, s.name));
+        setSourceId(suggested?.id || result.find(s => s.type === 'screen')?.id || result[0].id);
+      }
       setStatus(result.length ? 'Select the meeting screen/window, then start capture' : 'No shareable windows found. Open the meeting first.');
     } catch (error) {
       setStatus('Could not list desktop sources: ' + (error instanceof Error ? error.message : 'unknown error'));
+    }
+  };
+
+  const platformMatches = (target: MeetingPlatform, name: string) => {
+    const value = name.toLowerCase();
+    if (target === 'Microsoft Teams') return /microsoft teams|teams meeting|\bteams\b/.test(value);
+    if (target === 'Google Meet') return /google meet|meet\.google\.com|\bmeet\b/.test(value);
+    return /zoom meeting|zoom workplace|\bzoom\b/.test(value);
+  };
+
+  const choosePlatform = (next: MeetingPlatform) => {
+    setPlatform(next);
+    const match = sources.find(source => platformMatches(next, source.name));
+    if (match) {
+      setSourceId(match.id);
+      setStatus('Suggested source for ' + next + ': ' + match.name + '. Verify the source, then start capture.');
+    } else {
+      setStatus('No obvious ' + next + ' window title found. Choose the full screen or the correct meeting window manually. Platform selection does not connect an official meeting API.');
     }
   };
 
@@ -146,7 +169,7 @@ export default function DesktopMeetingPanel({ onQuestion }: Props) {
       const stream = pendingStream;
       if (!stream.getAudioTracks().length) {
         stream.getTracks().forEach(track => track.stop());
-        throw new Error('This source did not provide system audio. On Windows, select the full screen and ensure the meeting audio is playing.');
+        throw new Error('This source did not provide system audio for ' + platform + '. On Windows, select the full screen and ensure meeting audio is playing. Platform audio availability depends on the OS and source.');
       }
       const video = document.createElement('video');
       video.muted = true;
@@ -211,9 +234,12 @@ export default function DesktopMeetingPanel({ onQuestion }: Props) {
 
   return <section className="panel desktop-session">
     <div className="section-title"><h2><Monitor />Desktop live meeting session</h2><span className={'pill ' + (active ? 'ok' : '')}>{active ? 'CAPTURING' : desktop ? 'DESKTOP' : 'DESKTOP ONLY'}</span></div>
-    <p>On Windows, select the full display (not just a single window) to maximize system-audio loopback compatibility, combining system-audio transcription (local Whisper model) with visible screen/code OCR. Both inputs are processed on your computer; detected questions are sent to your configured local Ollama model.</p>
+    <p>Choose Teams, Google Meet, or Zoom as the meeting context, then select the matching meeting window or full display. The platform choice only helps pick a likely source; this build uses Windows/Electron desktop loopback capture plus visible screen OCR, not official Teams/Meet/Zoom APIs. Audio availability must be verified on this PC for each platform. Both inputs are processed locally; detected questions go to your local Ollama model.</p>
     {!desktop ? <div className="notice"><ShieldCheck size={17}/><div><b>Windows desktop app required</b><p>This capability uses OS-level capture APIs and is intentionally unavailable in the browser build.</p></div></div> : <>
       <div className="actions">
+        <select aria-label="Meeting platform" value={platform} disabled={active || busy} onChange={event => choosePlatform(event.target.value as MeetingPlatform)}>
+          <option>Microsoft Teams</option><option>Google Meet</option><option>Zoom</option>
+        </select>
         <select aria-label="Meeting display" value={sourceId} disabled={active || busy} onChange={event => setSourceId(event.target.value)} style={{flex:1,minWidth:180}}>
           <option value="">Choose screen/window…</option>
           {sources.map(source => <option key={source.id} value={source.id}>{source.type === 'screen' ? 'Screen' : 'Window'} — {source.name}</option>)}
@@ -221,7 +247,7 @@ export default function DesktopMeetingPanel({ onQuestion }: Props) {
         <button className="secondary" disabled={active || busy} onClick={() => void refreshSources()}><RefreshCw size={15}/>Refresh</button>
         {!active ? <button className="primary" disabled={busy || !sourceId} onClick={() => void startSession()}>{busy ? <LoaderCircle className="spin" size={15}/> : <AudioLines size={15}/>}Start capture</button> : <button className="secondary" onClick={stopSession}><Square size={15}/>Stop capture</button>}<button className="secondary" disabled={!desktop} onClick={() => void window.interviewMateDesktop?.showAnswerWindow()}><Sparkles size={15}/>Open answer window</button>
       </div>
-      <div className="notice spacer"><ShieldCheck size={17}/><div><b>Visible, permission-based capture</b><p>Capture is shown in the desktop app and stops when you press Stop or close the selected source. No hidden recording or participant-concealment mode is provided. The English Whisper model downloads on first use and then runs locally.</p></div></div>
+      <div className="notice spacer"><ShieldCheck size={17}/><div><b>Visible, permission-based capture</b><p>Selected context: {platform}. Capture is shown in the desktop app and stops when you press Stop or close the selected source. No hidden recording or participant-concealment mode is provided. The English Whisper model downloads on first use and then runs locally.</p></div></div>
       <div className="two-col spacer">
         <div className="result"><div className="label">Latest local transcript</div><p>{transcript || 'Waiting for speech…'}</p></div>
         <div className="result"><div className="label">Latest screen text (OCR)</div><p>{screenText || 'Waiting for readable screen text…'}</p></div>
