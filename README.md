@@ -13,7 +13,7 @@ parrotAssist is a free interview-practice workspace. **AI answers run through Ol
    ```
 3. In Windows **Edit environment variables for your account**, add or update this user variable:
    - Name: `OLLAMA_ORIGINS`
-   - Value: `https://interviewmate-three.vercel.app`
+   - Value: `https://interviewmate-three.vercel.app,https://parrotassist-newdivide4-8630.vercel.app,https://jobpilot-ai-topaz.vercel.app,http://localhost:4200,http://127.0.0.1:4200`
 4. Fully quit Ollama from the system tray, then start it again. The setting is not picked up until Ollama restarts.
 5. Open https://interviewmate-three.vercel.app → Settings → **Check server connection**.
 
@@ -36,7 +36,7 @@ A working endpoint returns HTTP 200 and JSON containing a `models` array. If eit
 - If it still happens, update/reinstall Ollama from https://ollama.com/download, then rerun `ollama list` and the `curl.exe` tests.
 - `Qwen Code` is a separate coding CLI and is **not required** by parrotAssist. Do not run its installer to set up parrotAssist.
 
-Do not expose port 11434 to the public internet. Keep `OLLAMA_ORIGINS` limited to the parrotAssist website. If the endpoint works in PowerShell but the site cannot reach it, check Chrome's local-network permission prompt and verify the origin variable, then restart Ollama.
+Do not expose port 11434 to the public internet. Keep `OLLAMA_ORIGINS` limited to the exact InterviewMate/parrotAssist app origins and local development origins you use; preserve both app origins rather than replacing one with the other. If the endpoint works in PowerShell but the site cannot reach it, check Chrome's local-network permission prompt and verify the origin variable, then restart Ollama.
 
 ## Windows desktop app (free)
 
