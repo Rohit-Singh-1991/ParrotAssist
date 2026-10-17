@@ -30,7 +30,7 @@ function createAnswerWindow() {
     height: 520,
     minWidth: 340,
     minHeight: 360,
-    title: 'InterviewMate — Answer Window',
+    title: 'parrotAssist — Answer Window',
     show: true,
     alwaysOnTop: true,
     skipTaskbar: false,
@@ -50,7 +50,7 @@ function createMainWindow() {
     height: 940,
     minWidth: 1024,
     minHeight: 700,
-    title: 'InterviewMate',
+    title: 'parrotAssist',
     show: false,
     backgroundColor: '#0d0f14'
   }));
